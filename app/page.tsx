@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
 import UploadComponent from '@/components/UploadComponent'
 import CanvasComponent from '@/components/CanvasComponent'
 import JsonControlPanel from '@/components/JsonControlPanel'
@@ -11,10 +10,12 @@ export default function HomePage() {
   const [imageState, setImageState] = useState<any>(null)
 
   const fetchImageState = async (id: string) => {
-    const { data, error } = await supabase.from('app1_images').select('*').eq('id', id).single()
-    if (!error && data) {
-      setImageState(data)
-      setActiveImageId(data.id)
+    // Fetch from sessionStorage instead of Supabase
+    const data = sessionStorage.getItem(`app1_image_${id}`)
+    if (data) {
+      const parsedData = JSON.parse(data)
+      setImageState(parsedData)
+      setActiveImageId(parsedData.id)
     }
   }
 
@@ -22,7 +23,7 @@ export default function HomePage() {
     <div className="h-screen flex flex-col">
       <header className="bg-white border-b px-6 py-4 flex justify-between items-center">
         <h1 className="text-xl font-bold">QwenEdit Workspace</h1>
-        <div className="text-sm text-gray-500">Public Beta</div>
+        <div className="text-sm text-gray-500">Public Beta (Local Mode)</div>
       </header>
 
       <main className="flex-1 flex overflow-hidden">

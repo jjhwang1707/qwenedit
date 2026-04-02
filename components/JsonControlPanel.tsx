@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
 
 export default function JsonControlPanel({ imageId, decomposedState, onEditComplete }: { imageId: string | null, decomposedState: any, onEditComplete: () => void }) {
   const [jsonInput, setJsonInput] = useState('{\n  "action": "replace",\n  "target": "background",\n  "prompt": "A cyberpunk city at night"\n}')
@@ -14,12 +13,15 @@ export default function JsonControlPanel({ imageId, decomposedState, onEditCompl
     // Mock nanobanana API processing delay
     await new Promise(resolve => setTimeout(resolve, 2000))
     
-    // Update the DB with a mock "final" image (using a dummy placeholder for the MVP)
+    // Update local state instead of DB
     const mockFinalImageUrl = 'https://images.unsplash.com/photo-1515630278258-407f66498911?q=80&w=1000&auto=format&fit=crop'
     
-    await supabase.from('app1_images').update({
-      final_image_url: mockFinalImageUrl
-    }).eq('id', imageId)
+    const existingData = sessionStorage.getItem(`app1_image_${imageId}`)
+    if (existingData) {
+      const parsedData = JSON.parse(existingData)
+      parsedData.final_image_url = mockFinalImageUrl
+      sessionStorage.setItem(`app1_image_${imageId}`, JSON.stringify(parsedData))
+    }
 
     onEditComplete()
     setProcessing(false)

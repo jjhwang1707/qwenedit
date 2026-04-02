@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
 
 export default function UploadComponent({ onUploadComplete }: { onUploadComplete: (id: string) => void }) {
   const [uploading, setUploading] = useState(false)
@@ -12,31 +11,24 @@ export default function UploadComponent({ onUploadComplete }: { onUploadComplete
 
     setUploading(true)
     try {
-      const fileExt = file.name.split('.').pop()
-      const filePath = `public/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      // 1. Mock Local Upload (Generate an object URL instead of uploading to Supabase)
+      const mockImageUrl = URL.createObjectURL(file)
 
-      // 1. Upload to Storage
-      const { error: uploadError } = await supabase.storage
-        .from('qwenedit-images')
-        .upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      const { data: publicUrlData } = supabase.storage
-        .from('qwenedit-images')
-        .getPublicUrl(filePath)
-
-      // 2. Mock Qwen Decomposition Call (Replace with real API)
+      // 2. Mock Qwen Decomposition Call (Simulate delay)
+      await new Promise(resolve => setTimeout(resolve, 1500))
       const mockDecomposedState = { layers: ["background", "subject", "foreground"], analysis: "Subject is centered." }
 
-      // 3. Create DB Record (No user_id needed anymore)
-      const { data: dbData, error: dbError } = await supabase.from('app1_images').insert({
-        original_image_url: publicUrlData.publicUrl,
+      // 3. Create a Local State Record instead of DB
+      const mockDbData = {
+        id: Math.random().toString(36).substring(7),
+        original_image_url: mockImageUrl,
         decomposed_state: mockDecomposedState
-      }).select().single()
+      }
 
-      if (dbError) throw dbError
-      if (dbData) onUploadComplete(dbData.id)
+      // Hack: Store in sessionStorage or a global variable so the parent can fetch it
+      sessionStorage.setItem(`app1_image_${mockDbData.id}`, JSON.stringify(mockDbData))
+
+      onUploadComplete(mockDbData.id)
 
     } catch (error) {
       console.error('Upload failed:', error)
