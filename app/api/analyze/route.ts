@@ -9,10 +9,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'GEMINI_API_KEY is not set' }, { status: 500 });
     }
 
-    // Securely extract the base64 string regardless of mime-type prefix length
     const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
     
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    // Using gemini-1.5-flash-latest which is strictly supported
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
