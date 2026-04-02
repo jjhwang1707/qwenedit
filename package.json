@@ -8,9 +8,16 @@
     "start": "next start"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.101.1",
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.4.27",
     "next": "latest",
+    "postcss": "^8.5.8",
     "react": "latest",
     "react-dom": "latest",
-    "@supabase/supabase-js": "latest"
+    "tailwindcss": "^3.4.19",
+    "typescript": "^6.0.2"
   }
 }

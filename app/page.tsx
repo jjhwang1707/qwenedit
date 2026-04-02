@@ -1,79 +1,49 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
+import UploadComponent from '@/components/UploadComponent'
+import CanvasComponent from '@/components/CanvasComponent'
+import JsonControlPanel from '@/components/JsonControlPanel'
 
-export default function AuthPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+export default function HomePage() {
+  const [activeImageId, setActiveImageId] = useState<string | null>(null)
+  const [imageState, setImageState] = useState<any>(null)
 
-  const handleAuth = async (action: 'login' | 'signup') => {
-    setLoading(true)
-    setError(null)
-    
-    const { data, error } = action === 'login' 
-      ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password })
-
-    if (error) {
-      setError(error.message)
-    } else if (data.user) {
-      router.push('/editor')
+  const fetchImageState = async (id: string) => {
+    const { data, error } = await supabase.from('app1_images').select('*').eq('id', id).single()
+    if (!error && data) {
+      setImageState(data)
+      setActiveImageId(data.id)
     }
-    setLoading(false)
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center mb-2">QwenEdit</h1>
-        <p className="text-center text-gray-500 mb-8">AI-powered precision image editing</p>
-        
-        {error && <div className="bg-red-50 text-red-500 p-3 rounded mb-4 text-sm">{error}</div>}
+    <div className="h-screen flex flex-col">
+      <header className="bg-white border-b px-6 py-4 flex justify-between items-center">
+        <h1 className="text-xl font-bold">QwenEdit Workspace</h1>
+        <div className="text-sm text-gray-500">Public Beta</div>
+      </header>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
-            <input 
-              type="email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-              placeholder="you@example.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Password</label>
-            <input 
-              type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-              placeholder="••••••••"
-            />
-          </div>
-          <div className="flex gap-4 pt-4">
-            <button 
-              onClick={() => handleAuth('login')}
-              disabled={loading}
-              className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              Log In
-            </button>
-            <button 
-              onClick={() => handleAuth('signup')}
-              disabled={loading}
-              className="flex-1 bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300 disabled:opacity-50"
-            >
-              Sign Up
-            </button>
-          </div>
+      <main className="flex-1 flex overflow-hidden">
+        {/* Left/Main Area: Canvas & Upload */}
+        <div className="flex-1 flex flex-col bg-gray-100 p-6 overflow-y-auto">
+          {!activeImageId ? (
+            <UploadComponent onUploadComplete={fetchImageState} />
+          ) : (
+            <CanvasComponent imageState={imageState} />
+          )}
         </div>
-      </div>
+
+        {/* Right Sidebar: JSON Control */}
+        <div className="w-96 bg-white border-l flex flex-col">
+          <JsonControlPanel 
+            imageId={activeImageId} 
+            decomposedState={imageState?.decomposed_state} 
+            onEditComplete={() => activeImageId && fetchImageState(activeImageId)}
+          />
+        </div>
+      </main>
     </div>
   )
 }
